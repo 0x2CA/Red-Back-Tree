@@ -30,7 +30,7 @@ namespace Red_Back_Tree {
                     this.head = node;
                     node.color = Color.BACK;
                     break;
-                } else if (node.data.CompareTo (current.data) <= 0) {
+                } else if (node.data.CompareTo (current.data) < 0) {
                     //比当前小
                     if (current.left != null) {
                         current = current.left;
@@ -40,7 +40,7 @@ namespace Red_Back_Tree {
                         node.color = Color.RED;
                         break;
                     }
-                } else if (node.data.CompareTo (current.data) > 0) {
+                } else if (node.data.CompareTo (current.data) >= 0) {
                     //比当前大
                     if (current.right != null) {
                         current = current.right;
@@ -140,45 +140,44 @@ namespace Red_Back_Tree {
 
         public bool remove (Node<T> node) {
 
-            Node<T> father = node.parent;
-            Node<T> brother = father?.right == node?father?.left : father.right;
-
             //孩子都为空
             if (node.left == null && node.right == null) {
                 this.removeZeroChildrenNode (node);
             } else if (node.left != null && node.right != null) {
                 //孩子都不为空
-                //TODO:
+                this.removeTwoChildrenNode (node);
             } else {
                 //其中一个为空
-                if (father != null) {
-                    if (node.left != null) {
-                        if (father.left == node) {
-                            father.left = node.left;
-                        } else {
-                            father.right = node.left;
-                        }
-                        node.left.parent = father;
-                    } else {
-                        if (father.left == node) {
-                            father.left = node.right;
-                        } else {
-                            father.right = node.right;
-                        }
-                        node.right.parent = father;
-                    }
-                } else {
-                    if (node.left != null) {
-                        this.head = node.left;
-                        node.left.parent = null;
-                    } else {
-                        this.head = node.right;
-                        node.right.parent = null;
-                    }
-                }
+                this.removeOneChildrenNode (node);
             }
 
             return false;
+        }
+
+        //删除有两个孩子节点
+        private void removeTwoChildrenNode (Node<T> node) {
+            //寻找后继节点
+            Node<T> descendantNode = this.getMinDescendantNode (node);
+            //交换数据
+            T dataTmp = descendantNode.data;
+            descendantNode.data = node.data;
+            node.data = descendantNode.data;
+
+            //删除后继节点
+            this.remove (descendantNode);
+        }
+
+        //获取最小的后继节点
+        private Node<T> getMinDescendantNode (Node<T> node) {
+            Node<T> right = node.right;
+            if (right != null) {
+                while (right.left != null) {
+                    right = right.left;
+                }
+                return right;
+            } else {
+                return null;
+            }
         }
 
         // 删除一个无孩子节点
@@ -279,6 +278,39 @@ namespace Red_Back_Tree {
             }
         }
 
+        //删除有一个孩子节点
+        private void removeOneChildrenNode (Node<T> node) {
+            Node<T> father = node.parent;
+            Node<T> brother = father?.right == node?father?.left : father.right;
+
+            if (father != null) {
+                if (node.left != null) {
+                    if (father.left == node) {
+                        father.left = node.left;
+                    } else {
+                        father.right = node.left;
+                    }
+                    node.left.parent = father;
+                } else {
+                    if (father.left == node) {
+                        father.left = node.right;
+                    } else {
+                        father.right = node.right;
+                    }
+                    node.right.parent = father;
+                }
+            } else {
+                //为根节点
+                if (node.left != null) {
+                    this.head = node.left;
+                    node.left.parent = null;
+                } else {
+                    this.head = node.right;
+                    node.right.parent = null;
+                }
+            }
+        }
+       
         //搜索
         public bool search (T data) {
             Node<T> current = head;
